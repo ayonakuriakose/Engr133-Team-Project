@@ -43,8 +43,8 @@ def load_img(path):
     # making image RGB into array
     img_array=np.array(img)
     # if statement for if the image array has 4 dimensions, then convert to 3
-    if img_array.ndim==4:
-        img_array=img_array[:,:,3]
+    if img_array.shape[-1]==4:
+        img_array=img_array[:,:,:3]
     # if statement to make sure the img_array is uint8
     if img_array.dtype!=np.uint8:
         img_array=img_array.astype(np.uint8)
@@ -58,7 +58,7 @@ def rgb_to_grayscale(img_array):
     # making RGB into grayscale
     gray_array=(0.2126*norm_array[:,:,0])+(0.7152*norm_array[:,:,1])+(0.0722*norm_array[:,:,2])
     # denormalizing, brings back to being array values between 0 and 255
-    gray_array=gray_array*255.0
+    gray_array=(gray_array*255.0).astype(np.uint8)
     return gray_array
     
 # main UDF
@@ -70,13 +70,19 @@ def main():
     
     if image.ndim==2:
         plt.imshow(image,cmap="gray")
-        plt.show(image)
+        plt.axis("off")
+        plt.show()
     else:
         ask_user=input("Would you like to convert to grayscale?\n")
         if ask_user=="yes":
             gray_image=rgb_to_grayscale(image)
             plt.imshow(gray_image,cmap="gray")
-            plt.show(gray_image)
+            plt.axis("off")
+            plt.show()
+        else:
+            plt.imshow(image)
+            plt.axis("off")
+            plt.show()
 
 if __name__ == "__main__":
     main()
