@@ -3,15 +3,15 @@ Course Number: ENGR 13300
 Semester: Fall 2025
 
 Description:
-    Replace this line with a description of your program.
+    Cleans an image by resizing + adding padding to the sides to prepare it for feature extraction and classification.
 
 Assignment Information:
     Assignment:     11.2.2 Tp1 team 2
     Team ID:        LC4 - 18 
     Author:         Justin Chen, chen5731@purdue.edu
-                    Arav, 
-                    Gina,
-                    Ayona
+                    Arav Srivastava, sriva222@dhaliwag@purdue.edu
+                    Gina Dhaliwal, dhaliwag@purdue.edu
+                    Ayona Kuriakose, akuriak@purdue.edu
     Date:           10/10/2025
 
 Contributors:
@@ -34,44 +34,66 @@ Academic Integrity Statement:
     submitting is my own original work.
 """
 
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 import matplotlib.pyplot as plt
 
-#intakes an np array with the image
+# takes a numpy image array and cleans/resizes it
 def clean_image(array):
-    print(f"Image shape before cleaning: {array.shape}")
-    
-    aspect_ratio = len(array[0]) / len(array)
-    new_width = 100
-    new_height = 100
-    if aspect_ratio < 1:
-        new_height /= aspect_ratio
+    print(f"Image shape before cleaning: {array.shape}")  # display original shape
+
+    aspect_ratio = len(array[0]) / len(array)  # calculate width-to-height ratio
+    new_width = 100  # base width for resizing
+    new_height = 100  # base height for resizing
+
+    # adjust dimensions based on aspect ratio
+    if aspect_ratio < 1:  
+        new_width *= aspect_ratio  # narrow image: scale width down
     elif aspect_ratio > 1:
-        new_width /= 100
-    image = Image.fromarray(array).resize(size=[new_height, new_width], resample=2)
+        new_height /= aspect_ratio  # wide image: scale height down
 
+    # convert dimensions to integers
+    new_height = int(new_height)
+    new_width = int(new_width)
+
+    # resize image 
+    image = Image.fromarray(array).resize(size=[new_width, new_height], resample=2)
     print(f"Resized image to: ({new_height}, {new_width})")
-    Image.ImageOps.pad(image=image, size=[100, 100], color="black", centering=(0.5, 0.5))
 
+    # pad image to 100×100 with black borders, centered at middle
+    image = ImageOps.pad(image=image, size=[100, 100], color="black", centering=(0.5, 0.5))
+
+    # convert processed image back to numpy array
     output_array = np.array(image)
     print(f"Image shape after cleaning: {output_array.shape}")
-    return output_array
 
+    return output_array  # return cleaned 100×100 image array
+
+
+# loads an image file and converts it to a numpy array
 def load_img(path):
-    img=Image.open(path)
-    img_array=np.array(img)
-    if img_array.ndim==4:
-        img_array=img_array[:,:,3]
-    if img_array.dtype!=np.uint8:
-        img_array=img_array.astype(np.uint8)
-    return img_array
+    img = Image.open(path)  # open image from given path
+    img_array = np.array(img)  # convert to numpy array
 
+    # reshapes array to only have 3 values (removes alpha value, if exists)
+    if img_array.shape[-1] == 4:
+        img_array = img_array[:, :, :3]
+
+    # ensure pixel values are in uint8 format
+    if img_array.dtype != np.uint8:
+        img_array = img_array.astype(np.uint8)
+
+    return img_array  # return 3-channel uint8 array
+
+
+# main function for running the image cleaning process
 def main():
-    path = input("Enter the path of the image you want to clean: ")
-    img_array = load_img(path)
-    output_img = clean_image(img_array)
-    plt.imshow(output_img)
+    path = input("Enter the path of the image you want to clean: ")  # ask user for image path
+    img_array = load_img(path)  # load image into array
+    output_img = clean_image(img_array)  # clean and resize image
+    plt.imshow(output_img)  # display cleaned image
+    plt.axis("off")  # hide axis labels
+    plt.show()  # render image display
 
 if __name__ == "__main__":
     main()
