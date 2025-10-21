@@ -39,37 +39,39 @@ import math
 #takes in blurred grayscale image
 #returns uint8 numpy array of sobel-filtered image
 def sobel_filter(image_array):
+    image_array = np.pad(image_array, pad_width=1, mode='constant', constant_values=0).astype(float)
     data_array = np.array(image_array, dtype=float)
     #pad the edge of the data array with 1 thing
-    data_array = np.pad(data_array, pad_width=1, mode='constant', constant_values=0)
-    data_x = data_array
-    data_y = data_array
-    for i in range(len(data_array)):
-        for j in range(len(data_array[0])):
-            data_array[i][j] = min(data_array[i][j], 255)
+    data_x = np.array(data_array)
+    data_y = np.array(data_array)
+
+    sobel_x = [[-1, 0, 1], 
+               [-2, 0, 2], 
+               [-1, 0, 1]]
+    sobel_y = [[-1, -2, -1], 
+               [0, 0, 0], 
+               [1, 2, 1]]
+
+    for row in range(1, len(data_array) - 1):
+        for col in range(1, len(data_array[0]) - 1):
+            #point is at row, col
+            kernel = image_array[row-1:row+2, col-1:col+2]
+            data_x[row][col] = np.sum(sobel_x * kernel)
+            data_y[row][col] = np.sum(sobel_y * kernel)
+
+    data_array = np.sqrt(data_x**2 + data_y**2)
+    data_array = np.clip(data_array, 0, 255)
+    data_array = data_array[1:-1, 1:-1]
 
     for row in range(len(data_array)):
-        if row == 0 or row == len(data_array)-1:
-            continue
         for col in range(len(data_array[0])):
-            #point is at row, col
-            if col == 0 or col == len(data_array[0])-1:
-                continue
-            data_y[row][col] = data_array[row-1][col-1] * -1 + data_array[row-1][col] * -2 + data_array[row-1][col+1] * -1
-            data_y[row][col] += data_array[row+1][col-1] * 1 + data_array[row+1][col] * 2 + data_array[row+1][col+1] * 1
-            data_x[row][col] = data_array[row-1][col-1] * -1 + data_array[row][col-1] * -2 + data_array[row+1][col-1] * -1
-            data_x[row][col] += data_array[row-1][col+1] * 1 + data_array[row][col+1] * 2 + data_array[row+1][col+1] * 1
-            data_y[row][col] /= 9
-            data_x[row][col] /= 9
-            data_array[row][col] = math.sqrt((data_x[row][col]) ** 2 + data_y[row][col] ** 2)
-            data_array[row][col] *= 255
             threshold = 50
-            if data_array[row][col] >= threshold:
-                data_array[row][col] = 255
+            if data_array[row, col] >= threshold:
+                data_array[row, col] = 255 
             else:
-                data_array[row][col] = 0
-    data_array = data_array[1:-1, 1:-1]
-    return data_array
+                data_array[row, col] = 0
+
+    return data_array.astype(np.uint8)
             
  # creating UDF for loading the image
 def load_img(path):
@@ -125,13 +127,13 @@ def gaussian_filter(gray_array,sigma):
     #Finds the size for the grid
     k=kernel_size//2
     #x values from -k to k from the center
-    x=np.arange(-k,k+1)
+    x=np.linspace(-k,k,kernel_size)
     #y vlaues from -k to k from the center
-    y=np.arange(-k,k+1)
+    y=np.linspace(-k,k,kernel_size)
     # relative x and y values for each position in the kernel
-    xx,yy=np.meshgrid(x,y)
+    X,Y=np.meshgrid(x,y)
     #Gaussian fucntion
-    gaus_xy=(1/(2*np.pi*sigma**2))*(np.e**(-(((xx**2)+(yy**2))/(2*sigma**2))))
+    gaus_xy=(1/(2*np.pi*sigma**2))*(np.exp(-(((X**2)+(Y**2))/(2*sigma**2))))
     #Normalize kernel
     kernel=gaus_xy/np.sum(gaus_xy)
     #gets the height and width of the array
@@ -139,16 +141,16 @@ def gaussian_filter(gray_array,sigma):
     #creates a zero array same size as gray array
     blurred=np.zeros_like(gray_array)
     #pads the edges of gray array
-    padded=np.pad(gray_array,k,mode='edge')
+    padded=np.pad(gray_array,k)
     #loop to blur each pixel
     #loops through all the rows
-    for y in range(height):
+    for x in range(gray_array.shape[0]):
         #loops through all the columns
-        for x in range(width):
+        for y in range(gray_array.shape[1]):
             #finds the 3x3 region surounding the pixel
-            region=padded[y:y+kernel_size,x:x+kernel_size]
+            region=padded[x:x+kernel_size,y:y+kernel_size]
             #blurred value for each pixel
-            blurred[y,x]=np.sum(region*kernel)
+            blurred[x,y]=np.sum(region*kernel)
     #returns blurred array
     return blurred.astype(np.uint8)
 
@@ -161,10 +163,12 @@ def main():
     gray_array=rgb_to_grayscale(image)
     #applies the gaussian filter to the grayscale image
     blurred_img=gaussian_filter(gray_array, sigma=1)
+
     #applies the sobel filter to the blurred image
     sobel_img=sobel_filter(blurred_img)
+
     #shows the blurred image and applies gray cmap to the image
-    plt.imshow(sobel_img,cmap="gray")
+    plt.imshow(sobel_img, cmap='gray')
     #makes sure no axes are showing in the output
     plt.axis("off")
     #shows the final gray blurred image 
