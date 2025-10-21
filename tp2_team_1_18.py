@@ -93,30 +93,28 @@ def gaussian_filter(gray_array,sigma):
     #Finds the size for the grid
     k=kernel_size//2
     #x values from -k to k from the center
-    x=np.arange(-k,k+1)
+    x=np.linspace(-k,k,kernel_size)
     #y vlaues from -k to k from the center
-    y=np.arange(-k,k+1)
+    y=np.linspace(-k,k,kernel_size)
     # relative x and y values for each position in the kernel
-    xx,yy=np.meshgrid(x,y)
+    X,Y=np.meshgrid(x,y)
     #Gaussian fucntion
-    gaus_xy=(1/(2*np.pi*sigma**2))*(np.e**(-(((xx**2)+(yy**2))/(2*sigma**2))))
+    gaus_xy=(1/(2*np.pi*sigma**2))*(np.exp(-(((X**2)+(Y**2))/(2*sigma**2))))
     #Normalize kernel
     kernel=gaus_xy/np.sum(gaus_xy)
-    #gets the height and width of the array
-    height,width=np.shape(gray_array)
     #creates a zero array same size as gray array
     blurred=np.zeros_like(gray_array)
     #pads the edges of gray array
-    padded=np.pad(gray_array,k,mode='edge')
+    padded=np.pad(gray_array,k)
     #loop to blur each pixel
     #loops through all the rows
-    for y in range(height):
+    for x in range(gray_array.shape[0]):
         #loops through all the columns
-        for x in range(width):
+        for y in range(gray_array.shape[1]):
             #finds the 3x3 region surounding the pixel
-            region=padded[y:y+kernel_size,x:x+kernel_size]
+            region=padded[x:x+kernel_size,y:y+kernel_size]
             #blurred value for each pixel
-            blurred[y,x]=np.sum(region*kernel)
+            blurred[x,y]=np.sum(region*kernel)
     #returns blurred array
     return blurred.astype(np.uint8)
 
