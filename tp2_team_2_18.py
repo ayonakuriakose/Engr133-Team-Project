@@ -3,7 +3,7 @@ Course Number: ENGR 13300
 Semester: Fall 2025
 
 Description:
-    Replace this line with a description of your program.
+    Implements a sobel filter for edge detection
 
 Assignment Information:
     Assignment:     11.2.2 tp2 team 2
@@ -186,4 +186,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
