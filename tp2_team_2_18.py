@@ -36,15 +36,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
-#takes in blurred grayscale image
-#returns uint8 numpy array of sobel-filtered image
+# takes in blurred grayscale image
+# returns uint8 numpy array of sobel-filtered image
 def sobel_filter(image_array):
+    # pad edges with zeros and convert to float
     image_array = np.pad(image_array, pad_width=1, mode='constant', constant_values=0).astype(float)
+    # create working copy of image as float array
     data_array = np.array(image_array, dtype=float)
-    #pad the edge of the data array with 1 thing
+    # duplicate arrays for x and y gradient calculations
     data_x = np.array(data_array)
     data_y = np.array(data_array)
 
+    # define sobel operator kernels for x and y gradients
     sobel_x = [[-1, 0, 1], 
                [-2, 0, 2], 
                [-1, 0, 1]]
@@ -52,17 +55,23 @@ def sobel_filter(image_array):
                [0, 0, 0], 
                [1, 2, 1]]
 
+    # apply sobel filter to each pixel (excluding padded border)
     for row in range(1, len(data_array) - 1):
         for col in range(1, len(data_array[0]) - 1):
-            #point is at row, col
+            # extract 3x3 neighborhood around current pixel
             kernel = image_array[row-1:row+2, col-1:col+2]
+            # compute gradient in x and y directions
             data_x[row][col] = np.sum(sobel_x * kernel)
             data_y[row][col] = np.sum(sobel_y * kernel)
 
+    # compute gradient magnitude
     data_array = np.sqrt(data_x**2 + data_y**2)
+    # clip values to 0–255 range
     data_array = np.clip(data_array, 0, 255)
+    # remove padding
     data_array = data_array[1:-1, 1:-1]
 
+    # apply threshold to highlight edges
     for row in range(len(data_array)):
         for col in range(len(data_array[0])):
             threshold = 50
@@ -71,6 +80,7 @@ def sobel_filter(image_array):
             else:
                 data_array[row, col] = 0
 
+    # return final edge-detected image as uint8 array
     return data_array.astype(np.uint8)
             
  # creating UDF for loading the image
@@ -176,3 +186,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
